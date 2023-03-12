@@ -1,4 +1,7 @@
 # Rmenu 
+
+> Not currently runnable 
+
 Simple menu application (similar to dmenu or roffi)
 
 Allows the user (or will when its complete) to open an application from their path, .desktop files or

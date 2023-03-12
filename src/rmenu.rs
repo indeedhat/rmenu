@@ -34,6 +34,10 @@ impl CliArgs {
     pub fn user_options(&self) -> Vec<Choice> {
         let mut choices: Vec<Choice> = vec![];
 
+        if self.options == "" {
+            return choices;
+        }
+
         for entry in self.options.split('\n') {
             choices.push(Choice {
                 name: entry.to_string(),
@@ -73,6 +77,26 @@ pub fn filter_entries(args: CliArgs, entries: Vec<Choice>) -> Vec<Choice> {
         }
     });
 
+    sort_entries(args, &mut found);
     found
 }
 
+pub fn sort_entries(args: CliArgs, entries: &mut Vec<Choice>) {
+    let q = if args.insensetive {
+        args.query.to_lowercase()
+    } else {
+        args.query.to_string()
+    };
+
+    entries.sort_by(|a, b| {
+        if args.insensetive {
+            a.name.to_lowercase().find(&q).cmp(&b.name.to_lowercase().find(&q))
+        } else {
+            a.name.find(&q).cmp(&b.name.find(&q))
+        }
+    });
+}
+
+pub fn alpha_sort_entries(entries: &mut Vec<Choice>) {
+    entries.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
+}
