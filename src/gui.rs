@@ -1,4 +1,4 @@
-use std::{borrow::Borrow, cell::RefCell, rc::Rc};
+use std::{cell::RefCell, rc::Rc};
 
 use gtk::{
     gio,
@@ -10,16 +10,16 @@ use gtk::{
     Orientation,
     Box,
     SearchEntry,
-    // ListBox,
     Label,
     ScrolledWindow,
-    // FilterListModel,
-    // CustomFilter, 
     SignalListItemFactory, 
     ListItem, 
-    // glib::List, 
     SingleSelection, 
-    ListView, FilterListModel, CustomFilter, FilterChange
+    ListView, 
+    FilterListModel, 
+    CustomFilter, 
+    FilterChange, 
+    Widget
 };
 
 use crate::{fs::Choice, list_entry::TextObject};
@@ -53,32 +53,18 @@ fn build_ui(app: &Application, entries: Vec<Choice>) {
     list_factory.connect_setup(|_, item| {
         let label = Label::new(None);
 
-        item.downcast_ref::<ListItem>()
-            .expect("Needs to be a list item")
-            .set_child(Some(&label));
-    });
+        let item = item.downcast_ref::<ListItem>()
+            .expect("Needs to be a list item");
 
-    list_factory.connect_bind(|_, item| {
-        let text_object = item.downcast_ref::<ListItem>()
-            .expect("Needs to be a ListItem")
-            .item()
-            .and_downcast::<TextObject>()
-            .expect("Needs to be a TextObject");
+        item.set_child(Some(&label));
 
-        let text = text_object.property::<String>("text");
-
-        let label = item.downcast_ref::<ListItem>()
-            .expect("Needs to be a ListItem")
-            .child()
-            .and_downcast::<Label>()
-            .expect("Needs to be a Label");
-
-        label.set_label(&text.to_string());
+        item.property_expression("item")
+            .chain_property::<TextObject>("text")
+            .bind(&label, "label", Widget::NONE);
     });
 
     let filter_query = query.clone();
     let filter = CustomFilter::new(move |obj| {
-        println!("filter {}", (*filter_query).borrow());
         let string_object = obj.downcast_ref::<TextObject>()
             .expect("The objcet nedds to be a TextObject");
 
