@@ -1,4 +1,4 @@
-use std::cell::Cell;
+use std::cell::RefCell;
 
 use glib::{ParamSpec,  Value, ParamSpecString};
 use gtk::glib;
@@ -7,7 +7,7 @@ use once_cell::sync::Lazy;
 
 #[derive(Default)]
 pub struct TextObject {
-    text: Cell<String>,
+    text: RefCell<String>,
 }
 
 // The central trait for subclassing a GObject
@@ -35,9 +35,9 @@ impl ObjectImpl for TextObject {
         }
     }
 
-    fn property(&self, _id: usize, pspec: &ParamSpec) -> Value {
+fn property(&self, _id: usize, pspec: &ParamSpec) -> Value {
         match pspec.name() {
-            "text" => Value::from(self.text.get_mut().to_string()),
+            "text" => Value::from(self.text.borrow().to_string()),
             _ => unimplemented!(),
         }
     }

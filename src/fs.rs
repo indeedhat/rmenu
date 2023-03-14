@@ -4,6 +4,7 @@ use std::{fs, vec};
 use faccess::PathExt;
 use freedesktop_entry_parser::parse_entry;
 
+#[derive(Clone)]
 pub struct Choice {
     pub value: String,
     pub name: String,
