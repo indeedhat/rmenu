@@ -1,4 +1,4 @@
-use std::{cell::RefCell, rc::Rc};
+use std::{cell::RefCell, rc::Rc, path::Path};
 
 use gtk::{
     gio,
@@ -23,7 +23,9 @@ use gtk::{
     Widget, 
     CustomSorter, 
     SortListModel, 
-    SorterChange
+    SorterChange, 
+    STYLE_PROVIDER_PRIORITY_APPLICATION, 
+    gdk::Display, pango::Alignment
 };
 
 use crate::{fs::Choice, list_entry::TextObject};
@@ -36,7 +38,18 @@ pub fn new(entries: Vec<Choice>) -> Application {
 
     let en = entries.clone();
 
-    app.connect_activate(move |app| build_ui(app, en.to_vec()));
+    app.connect_startup(move |app| {
+        let provider = gtk::CssProvider::new();
+        provider.load_from_path(Path::new("./config/style.css"));
+
+        gtk::StyleContext::add_provider_for_display(
+            &Display::default().expect("failed to connect to display"),
+            &provider,
+            STYLE_PROVIDER_PRIORITY_APPLICATION
+        );
+
+        build_ui(app, en.to_vec());
+    });
 
     app
 }
@@ -55,7 +68,7 @@ fn build_ui(app: &Application, entries: Vec<Choice>) {
 
     let win = ApplicationWindow::builder()
         .application(app)
-        .title("rmenu")
+        .title("r-menu")
         .default_width(800)
         .default_height(600)
         .build();
@@ -107,6 +120,8 @@ fn build_list_view(
 
     list_factory.connect_setup(|_, item| {
         let label = Label::new(None);
+        label.add_css_class("list-item");
+        label.set_xalign(0.0);
 
         let item = item.downcast_ref::<ListItem>()
             .expect("Needs to be a list item");
@@ -157,6 +172,7 @@ fn build_list_view(
 
     let selection_model = SingleSelection::new(Some(sorter_model));
     let list_view = ListView::new(Some(selection_model), Some(list_factory));
+    list_view.add_css_class("list");
 
     let list_scroll_view = ScrolledWindow::builder()
         .hscrollbar_policy(gtk::PolicyType::Never)
