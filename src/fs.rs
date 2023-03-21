@@ -3,13 +3,8 @@ use std::error::Error;
 use std::{fs, vec};
 use faccess::PathExt;
 use freedesktop_entry_parser::parse_entry;
+use crate::rmenu::Choice;
 
-#[derive(Clone)]
-pub struct Choice {
-    pub value: String,
-    pub name: String,
-    pub icon: String
-}
 
 /// list all the binaries found it the directories described in the users PATH
 pub fn list_bins_from_path() -> Result<Vec<Choice>, VarError> {

@@ -2,7 +2,12 @@ use std::vec;
 
 use clap::Parser;
 
-use crate::fs::Choice;
+#[derive(Clone)]
+pub struct Choice {
+    pub value: String,
+    pub name: String,
+    pub icon: String
+}
 
 /// Rust port of Dmenu
 #[derive(Parser, Debug)]

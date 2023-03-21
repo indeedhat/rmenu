@@ -11,32 +11,27 @@ use gtk::{
     Orientation,
     Box,
     SearchEntry,
-    Label,
     ScrolledWindow,
     SignalListItemFactory, 
-    ListItem, 
     SingleSelection, 
     ListView, 
     FilterListModel, 
     CustomFilter, 
     FilterChange, 
-    Widget, 
     CustomSorter, 
     SortListModel, 
     SorterChange, 
     STYLE_PROVIDER_PRIORITY_APPLICATION, 
-    gdk::Display, pango::Alignment
+    gdk::Display
 };
 
-use crate::{fs::Choice, list_entry::TextObject};
+use crate::{list_entry::TextObject, modes::MenuMode};
 
 /// create a new gtk4 application
-pub fn new(entries: Vec<Choice>) -> Application {
+pub fn new<T: MenuMode + 'static>(mode: T) -> Application {
     let app = Application::builder()
         .application_id("com.indeedhat.rmenu")
         .build();
-
-    let en = entries.clone();
 
     app.connect_startup(move |app| {
         let provider = gtk::CssProvider::new();
@@ -48,14 +43,16 @@ pub fn new(entries: Vec<Choice>) -> Application {
             STYLE_PROVIDER_PRIORITY_APPLICATION
         );
 
-        build_ui(app, en.to_vec());
+        build_ui(app, &mode);
     });
 
     app
 }
 
 /// render the ui
-fn build_ui(app: &Application, entries: Vec<Choice>) {
+fn build_ui<T: MenuMode>(app: &Application, mode: &T) {
+    let entries = mode.build_choices().unwrap();
+
     let query: Rc<RefCell<String>> = Rc::new(RefCell::new("".to_string()));
 
     let data: Vec<TextObject> = entries.into_iter()
@@ -79,7 +76,7 @@ fn build_ui(app: &Application, entries: Vec<Choice>) {
     let (search_bar, search_entry) = build_search_bar(&win);
     container.append(&search_bar);
 
-    let (list_scroll_view, filter, sorter) = build_list_view(data_model, &query);
+    let (list_scroll_view, filter, sorter) = build_list_view(mode, data_model, &query);
     container.append(&list_scroll_view);
 
     let search_query = query.clone();
@@ -108,7 +105,8 @@ fn build_search_bar(win: &ApplicationWindow) -> (SearchBar, SearchEntry) {
     (search_bar, entry)
 }
 
-fn build_list_view(
+fn build_list_view<T: MenuMode>(
+    mode: &T,
     data_model: ListStore,
     query: &Rc<RefCell<String>>
 ) -> (
@@ -118,56 +116,12 @@ fn build_list_view(
  ) {
     let list_factory = SignalListItemFactory::new();
 
-    list_factory.connect_setup(|_, item| {
-        let label = Label::new(None);
-        label.add_css_class("list-item");
-        label.set_xalign(0.0);
+    mode.connect_setup(&list_factory);
 
-        let item = item.downcast_ref::<ListItem>()
-            .expect("Needs to be a list item");
-
-        item.set_child(Some(&label));
-
-        item.property_expression("item")
-            .chain_property::<TextObject>("text")
-            .bind(&label, "label", Widget::NONE);
-    });
-
-    let filter_query = query.clone();
-    let filter = CustomFilter::new(move |obj| {
-        let string_object = obj.downcast_ref::<TextObject>()
-            .expect("The objcet nedds to be a TextObject");
-
-        let text = string_object.property::<String>("text");
-
-
-        if (*filter_query).borrow().to_string() == "".to_string() {
-            return true;
-        }
-
-        text.contains(&(*filter_query).borrow().to_string())
-    });
-
-
+    let filter = mode.custom_filter(query.clone());
     let filter_model = FilterListModel::new(Some(data_model), Some(filter.clone()));
 
-    let sorter_query = query.clone();
-    let sorter = CustomSorter::new(move |obj1, obj2| {
-        let string_object_1 = obj1.downcast_ref::<TextObject>()
-            .expect("the object needs to be a TextObject");
-
-        let string_object_2 = obj2.downcast_ref::<TextObject>()
-            .expect("the object needs to be a TextObject");
-
-        let query = &(*sorter_query).borrow().to_string();
-
-        string_object_1.property::<String>("text")
-            .to_lowercase()
-            .find(query)
-            .cmp(&string_object_2.property::<String>("text").to_lowercase().find(query))
-            .into()
-    });
-
+    let sorter = mode.custom_sorter(query.clone());
     let sorter_model = SortListModel::new(Some(filter_model), Some(sorter.clone()));
 
     let selection_model = SingleSelection::new(Some(sorter_model));
