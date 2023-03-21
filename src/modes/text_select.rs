@@ -1,7 +1,7 @@
 use std::{env::{VarError, self}, fs, rc::Rc, cell::RefCell, sync::Arc};
 use faccess::PathExt;
 use gtk::{
-    prelude::*, SignalListItemFactory, Label, ListItem, Widget, CustomFilter, CustomSorter
+    prelude::*, SignalListItemFactory, Label, ListItem, Widget, CustomFilter, CustomSorter, Ordering
 };
 
 use super::MenuMode;
@@ -65,10 +65,19 @@ impl MenuMode for TextSelect {
 
             let query = &(*query).borrow().to_string();
 
-            string_object_1.property::<String>("text")
+            let pos_cmp = string_object_1.property::<String>("text")
                 .to_lowercase()
                 .find(query)
                 .cmp(&string_object_2.property::<String>("text").to_lowercase().find(query))
+                .into();
+
+            if pos_cmp != Ordering::Equal {
+                return pos_cmp;
+            }
+
+            string_object_1.property::<String>("text")
+                .len()
+                .cmp(&string_object_2.property::<String>("text").len())
                 .into()
         })
     }
