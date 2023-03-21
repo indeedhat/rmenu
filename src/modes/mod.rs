@@ -2,11 +2,11 @@ use std::{env::VarError, rc::Rc, cell::RefCell};
 
 use gtk::{SignalListItemFactory, CustomFilter, CustomSorter};
 
-use crate::rmenu::{Choice, CliArgs};
+use crate::rmenu::Choice;
 
 mod app_info;
 pub mod dmenu;
-mod text_select;
+pub mod text_select;
 
 
 pub trait MenuMode {

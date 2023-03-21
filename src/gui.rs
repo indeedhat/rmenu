@@ -9,7 +9,7 @@ use gtk::{
     SearchBar,
     Align,
     Orientation,
-    Box,
+    Box as GtkBox,
     SearchEntry,
     ScrolledWindow,
     SignalListItemFactory, 
@@ -28,7 +28,7 @@ use gtk::{
 use crate::{list_entry::TextObject, modes::MenuMode};
 
 /// create a new gtk4 application
-pub fn new<T: MenuMode + 'static>(mode: T) -> Application {
+pub fn new<T: MenuMode + 'static + ?Sized>(mode: Box<T>) -> Application {
     let app = Application::builder()
         .application_id("com.indeedhat.rmenu")
         .build();
@@ -50,7 +50,7 @@ pub fn new<T: MenuMode + 'static>(mode: T) -> Application {
 }
 
 /// render the ui
-fn build_ui<T: MenuMode>(app: &Application, mode: &T) {
+fn build_ui<T: MenuMode + ?Sized>(app: &Application, mode: &Box<T>) {
     let entries = mode.build_choices().unwrap();
 
     let query: Rc<RefCell<String>> = Rc::new(RefCell::new("".to_string()));
@@ -70,7 +70,7 @@ fn build_ui<T: MenuMode>(app: &Application, mode: &T) {
         .default_height(600)
         .build();
 
-    let container = Box::new(Orientation::Vertical, 2);
+    let container = GtkBox::new(Orientation::Vertical, 2);
     win.set_child(Some(&container));
 
     let (search_bar, search_entry) = build_search_bar(&win);
@@ -105,8 +105,8 @@ fn build_search_bar(win: &ApplicationWindow) -> (SearchBar, SearchEntry) {
     (search_bar, entry)
 }
 
-fn build_list_view<T: MenuMode>(
-    mode: &T,
+fn build_list_view<T: MenuMode + ?Sized>(
+    mode: &Box<T>,
     data_model: ListStore,
     query: &Rc<RefCell<String>>
 ) -> (
