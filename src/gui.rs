@@ -83,9 +83,9 @@ fn build_ui<T: MenuMode + ?Sized>(app: &Application, mode: &Box<T>) {
         .default_height(600)
         .build();
 
-    let selected_action = SimpleAction::new("selected", Some(&u32::static_variant_type()));
+    let selected_action = SimpleAction::new("selected", Some(&String::static_variant_type()));
     selected_action.connect_activate(move |_action, param| {
-        print!("pos: {}", param.unwrap());
+        print!("value clicked: {}", param.unwrap());
     });
     win.add_action(&selected_action);
 
@@ -147,7 +147,13 @@ fn build_list_view<T: MenuMode + ?Sized>(
     let list_view = ListView::new(Some(selection_model), Some(list_factory));
     list_view.add_css_class("list");
     list_view.connect_activate(|list_view, position| {
-        list_view.activate_action("win.selected", Some(&position.to_variant()))
+        let model = list_view.model().expect("failed to get list model");
+        let text = model.item(position)
+            .and_downcast::<TextObject>()
+            .expect("fail to get text object")
+            .property::<String>("text");
+
+        list_view.activate_action("win.selected", Some(&text.to_variant()))
             .expect("failed to trigger window.selected action");
         list_view.activate_action("app.quit", None)
             .expect("failed to trigger app.quit action");
