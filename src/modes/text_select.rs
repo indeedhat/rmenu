@@ -1,11 +1,14 @@
-use std::{env::{VarError, self}, fs, rc::Rc, cell::RefCell, sync::Arc};
-use faccess::PathExt;
+use std::{env::VarError, rc::Rc, cell::RefCell};
 use gtk::{
-    prelude::*, SignalListItemFactory, Label, ListItem, Widget, CustomFilter, CustomSorter, Ordering
+    prelude::*, SignalListItemFactory, Label, ListItem, Widget, CustomFilter, CustomSorter, 
+    Ordering
 };
 
 use super::MenuMode;
-use crate::{rmenu::{CliArgs, Choice}, list_entry::TextObject};
+use crate::{
+    rmenu::{CliArgs, Choice}, 
+    list_entry::TextObject
+};
 
 pub struct TextSelect {
     args: CliArgs

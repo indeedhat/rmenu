@@ -8,12 +8,12 @@ use super::MenuMode;
 use crate::{rmenu::{CliArgs, Choice}, list_entry::TextObject};
 
 pub struct Dmenu {
-    args: CliArgs
+    _args: CliArgs
 }
 
 impl Dmenu {
     pub fn new(args: CliArgs) -> Self {
-        Dmenu{ args }
+        Dmenu{ _args: args }
     }
 }
 

@@ -10,8 +10,6 @@ entry {
 }
 
 .list-item {
-    display: block;
-    text-align: left;
     padding: 10px 5px;
     border-bottom: 1px solid white;
 }
